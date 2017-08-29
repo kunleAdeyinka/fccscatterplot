@@ -1,0 +1,45 @@
+body, a{
+  margin: 0px;
+  font: 11px sans-serif;
+  color: #ffffff;
+}
+p {
+  margin: 10px 30px;
+}
+div, svg {
+  margin: auto;
+}
+.chart text {
+  fill: black;
+  font: 14px sans-serif;
+  text-anchor: end;
+}
+.label text {
+  fill: black;
+  font: 10px sans-serif;
+  text-anchor: start;
+}
+.axis text {
+  font: 10px sans-serif;
+}
+
+.x text {
+  text-anchor: middle;
+}
+.axis path,.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.title text, .title-2 text, .title-3 text {
+  font: 25px sans-serif;
+  fill: steelblue;
+  text-anchor: middle;
+}
+.title-2 text, .title-3 text {
+  font: 22px sans-serif;
+  fill: #000000;
+}
+.title-3 text {
+  font: 18px sans-serif;
+}

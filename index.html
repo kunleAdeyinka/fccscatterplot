@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <title>D3 Scatterplot Project</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    <link href="https://bootstrap-themes.github.io/dashboard/assets/css/toolkit-inverse.css" rel="stylesheet">
+    <link href="https://bootstrap-themes.github.io/dashboard/assets/css/application.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.min.js"></script>
+
+    <style>
+      body {
+        width: 1px;
+        min-width: 100%;
+        *width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+        <!--<div class="bw">-->
+            <!--<div class="di">-->
+                <!--<div class="es bsk">-->
+                    <div class="brv">
+                        <div class="brw">
+                          <h6 class="bry">FreeCodeCamp Project</h6>
+                          <h2 class="brx">Visualize Data with a Scatterplot Graph</h2>
+                        </div>
+                    </div>
+                    <hr class="afx">
+                    <div class="di awt agl">
+                        <div class="target"></div>
+                        <p><b>Sources:</b></p>
+                        <p><a href="https://en.wikipedia.org/wiki/Alpe_d%27Huez">wikipedia.org</a>
+                          || <a href="http://www.fillarifoorumi.fi/forum/showthread.php?38129-Ammattilaispy%F6r%E4ilij%F6iden-nousutietoja-%28aika-km-h-VAM-W-W-kg-etc-%29&p=2041608#post2041608">fillarifoorumi.fi</a>
+                          || <a href="https://alex-cycle.blogspot.com/2015/07/alpe-dhuez-tdf-fastest-ascent-times.html">alex-cycle.blogspot.com</a>
+                          || <a href="http://www.dopeology.org/">dopeology.org</a>
+                        </p>
+                        <script>
+                            var url = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/cyclist-data.json';
+
+                            scatterPlot(url, '.target');
+
+                            function scatterPlot(url, target){
+
+                              var margin = {top: 60, right: 100, bottom: 50, left: 60};
+                              var width = window.innerWidth - margin.left - margin.right;
+                              var height = window.innerHeight - margin.top - margin.bottom - 75;
+
+                              var svg = initialiseSVG(target);
+
+                              //set up the graph with the json data and d3 properties
+                              d3.json(url, function(err,json) {
+                                  var scale = {x: '', y: '', xAxis: '', yAxis: ''};
+                                  var fastestTime = d3.min(json, function(a){ return a.Seconds; });
+
+                                  scale.x = d3.scaleLinear()
+                                              .domain([d3.max(json, function(a){ return a.Seconds; }) - fastestTime + 10, 0])
+                                              .range([0, width]);
+                                  scale.xAxis = d3.axisBottom(scale.x).tickFormat(convertTime);
+
+                                  scale.y = d3.scaleLinear().domain([d3.max(json, function(a){ return a.Place; }) + 2, 1])
+                                              .range([height, 0]);
+                                  scale.yAxis = d3.axisLeft(scale.y);
+
+                                  svg.selectAll("svg").data(json).enter().append("g").call(function(g){ chart(g, scale, fastestTime) });
+                                  svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(scale.xAxis);
+                                  svg.append("g").attr("class", "y axis").call(scale.yAxis);
+                              });
+
+                              appendTitle("Doping in Professional Bicycle Racing", width * 3 / 8, 0, "title");
+                              appendTitle("35 Fastest times up Alpe d'Huez", width * 3 / 8, 32, "title-2");
+                              appendTitle("Normalized to 13.8km distance", width * 3 / 8, 60, "title-3");
+                              appendTitle("Minutes Behind Fastest Time", width / 2, height + 40, "title-3");
+                              appendTitle("No doping allegations", width - 100, height * 2 / 3, "label");
+                              appendCircle(width - 110, height * 2 / 3 - 5, "steelblue")
+                              appendTitle("Riders with doping allegations", width  - 100, height * 2 / 3 + 30, "label");
+                              appendCircle(width - 110, height * 2 / 3 + 25, "#c0625e")
+
+
+                              //helper functions
+                              function initialiseSVG(target){
+                                var svg = d3.select(target).append('svg').attr("width", width + margin.left + margin.right)
+                                            .attr("height", height + margin.top + margin.bottom).append("g")
+                                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                                return svg;
+                              };
+
+                              function convertTime(s) {
+                                var sec = s % 60, min = (s - sec) / 60;
+                                sec = (sec < 10) ? "0" + sec : sec;
+
+                                return min + ":" + sec;
+                              };
+
+                              function appendTitle(txt, x, y, classname){
+                                svg.append("g").attr("class", classname).append("text").attr("x", x).attr("y", y).text(txt);
+                              };
+
+                              function appendCircle(x, y, color){
+                                svg.append("g").append("circle").attr("cx", x).attr("cy",y).attr("r",4).attr("fill", color)
+                                   .attr("stroke", color)
+                              };
+
+                              function chart(g, scale, fastestTime){
+                                g.each(function(data) {
+
+                                  var color = (data.Doping == "") ? "steelblue" : "#c0625e";
+                                  d3.select(this).on("mouseover", function(d, i){ onMouseOver.call(this, d, i, color); })
+                                                 .on("mouseout", function(d, i){ onMouseOut.call(this, d, i, color); })
+                                                 .append("circle")
+                                                 .attr("cx", scale.x(data.Seconds - fastestTime))
+                                                 .attr("cy", scale.y(data.Place))
+                                                 .attr("r", 4 )
+                                                 .attr("fill", color)
+                                                 .attr("stroke", color)
+                                  d3.select(this).append("text").attr("x", scale.x(data.Seconds - fastestTime) + 10)
+                                                 .attr("y", scale.y(data.Place) + 5).text(data.Name);
+                                });
+                              };
+
+                              function onMouseOver(d, i, color){
+                                d3.select(this).select("circle").attr("fill", "green");
+                                d3.select(this).select("circle").attr("stroke", "green");
+                                d3.select(this).append("g").attr("style", "font: 14px sans-serif;");
+                                d3.select(this).select("g").append("text")
+                                               .attr("id", function() { return "t1-" + d.Place })
+                                               .attr("x", width / 2 )
+                                               .attr("y", height - 150 )
+                                               .text(function() { return d.Name + ": " + d.Nationality });
+                                d3.select(this).select("g").append("text")
+                                               .attr("id", function() { return "t2-" + d.Place })
+                                               .attr("x", width / 2 )
+                                               .attr("y", height - 125 )
+                                               .text(function() { return "Year: " + d.Year + ", Time: " + convertTime(d.Seconds) });
+
+                                var doping = (d.Doping == "") ? ["No doping allegations", ""] : splitString(d.Doping, 25);
+
+                                d3.select(this).select("g").append("text")
+                                                           .attr("id", function() { return "t3-" + d.Place })
+                                                           .attr("x", width / 2 )
+                                                           .attr("y", height - 100 )
+                                                           .text(doping[0]);
+                                d3.select(this).select("g").append("text")
+                                                           .attr("id", function() { return "t4-" + d.Place })
+                                                           .attr("x", width / 2 )
+                                                           .attr("y", height - 75 )
+                                                           .text(doping[1]);
+                              };
+
+                              function onMouseOut(d, i, color){
+                                d3.select(this).select("circle").attr("fill", color)
+                                d3.select(this).select("circle").attr("stroke", color)
+                                d3.select(this).select("#t1-" + d.Place ).remove()
+                                d3.select(this).select("#t2-" + d.Place ).remove()
+                                d3.select(this).select("#t3-" + d.Place ).remove()
+                                d3.select(this).select("#t4-" + d.Place ).remove()
+                              };
+
+                              svg.append("g").append("text").attr("class", "title").attr("y", 20).attr("x", -80)
+                                                            .attr("transform", "rotate(-90)").text("Ranking");
+
+                              function splitString(s, threshold) {
+                                  if(s.length > threshold) {
+                                    var ary1 = s.split(' '), ary2 = [], i = 0;
+                                    do {
+                                      i += ary1[ary1.length-1].length;
+                                      ary2.unshift(ary1.pop());
+                                    } while(i < s.length / 2);
+                                    ary1.push(ary2.shift());
+                                    return [ary1.join(' '), ary2.join(' ')];
+                                  }
+                                  return [s, ""];
+                                }
+
+                              }
+
+                        </script>
+                    </div>
+                    <hr class="agl">
+                    <footer class="text-center">Project Design by Kunle Adeyinka</footer>
+                <!--</div>-->
+            <!--</div>v-->
+        <!--</div>-->
+  </body>
+</html>
